@@ -1,6 +1,7 @@
 package com.example.platformerfr;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -13,10 +14,12 @@ public class MainActivity extends AppCompatActivity {
         // Find the custom view and buttons
         CustomView customView = findViewById(R.id.myCanvasView);
         Button buttonLeft = findViewById(R.id.button_left);
+
+        int[] location = new int[2];
+
         Button buttonRight = findViewById(R.id.button_right);
         Button buttonJump = findViewById(R.id.button_jump);
 
-        // Set up buttons in the custom view
-        // customView.setupButtons(buttonLeft, buttonRight, buttonJump);
+        customView.setupButtons(buttonLeft, buttonRight, buttonJump);
     }
 }
