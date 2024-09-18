@@ -8,6 +8,8 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 
 public class PlayerCharacter {
+    private Context context;
+
     private Bitmap sprite, spriteFlipped;
     private Bitmap currentSprite;
 
@@ -21,8 +23,11 @@ public class PlayerCharacter {
     private int floorY;
     private int wallX;
     private String direction;
+    private final double atkSpeed;
+    private long lastAttackTime;
 
     public PlayerCharacter(Context context, int x, int y, int floorY, int wallX) {
+        this.context = context;
         this.x = x;
         this.y = y;
         this.width = 150;
@@ -33,6 +38,8 @@ public class PlayerCharacter {
         this.floorY = floorY;
         this.wallX = wallX;
         this.direction = "Right";
+        this.atkSpeed = 5;
+        this.lastAttackTime = System.currentTimeMillis();
 
         // Initialize bounding box and paint
         boundingBox = new Rect(x, y, x + width, y + height);
@@ -77,7 +84,7 @@ public class PlayerCharacter {
         }
     }
 
-    public void changeSprite () {
+    public void changeSprite() {
         switch (direction) {
             case "Right":
                 currentSprite = spriteFlipped;
@@ -85,6 +92,16 @@ public class PlayerCharacter {
             case "Left":
                 currentSprite = sprite;
                 break;
+        }
+    }
+
+    public void doAttack() {
+        long currentTime = System.currentTimeMillis();
+        long attackInterval = (long) (1000 / atkSpeed);
+
+        if (currentTime - lastAttackTime >= attackInterval) {
+            Projectile projectile = new Projectile(context, x, y, floorY, wallX, direction);
+            lastAttackTime = currentTime;
         }
     }
 
@@ -109,11 +126,35 @@ public class PlayerCharacter {
         update(floorY);
     }
 
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
+    }
+
+    public String getDirection() {
+        return direction;
+    }
+
+    public double getAtkSpeed() {
+        return atkSpeed;
+    }
+
+    public long getLastAttackTime() {
+        return lastAttackTime;
+    }
+
     public void setFloorY(int floorY) {
         this.floorY = floorY;
     }
 
     public void setWallX(int wallX) {
         this.wallX = wallX;
+    }
+
+    public void setLastAttackTime(long lastAttackTime) {
+        this.lastAttackTime = lastAttackTime;
     }
 }

@@ -12,12 +12,17 @@ import android.view.ViewTreeObserver;
 import android.widget.Button;
 import android.util.Log;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 public class CustomView extends View {
     private PlayerCharacter player;
     private boolean isMovingLeft;
     private boolean isMovingRight;
     private Paint paint;
     private int floorY;
+
+    private List<Projectile> projectiles;
 
     public CustomView(Context context) {
         super(context);
@@ -30,21 +35,17 @@ public class CustomView extends View {
     }
 
     private void init(Context context) {
-        // Use ViewTreeObserver to wait for layout pass to get width and height
         ViewTreeObserver observer = getViewTreeObserver();
         observer.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
-                // Remove the listener to avoid multiple calls
                 getViewTreeObserver().removeOnGlobalLayoutListener(this);
-
-                // Initialize the player character with position in the middle of the screen
                 int centerX = getWidth() / 2 - 100;
                 int edgeX = getWidth();
                 int centerY = getHeight() / 2 + 300;
                 floorY = centerY;
                 player = new PlayerCharacter(context, centerX, centerY, centerY, edgeX);
-
+                projectiles = new ArrayList<>();
                 invalidate();
             }
         });
@@ -53,16 +54,38 @@ public class CustomView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-
-        // Clear the canvas
         canvas.drawColor(Color.WHITE);
 
         player.update(floorY);
         player.draw(canvas);
 
+        updateProjectiles();
+        drawProjectiles(canvas);
+
         player.moveCharacter(isMovingLeft, isMovingRight);
 
         invalidate();
+    }
+
+    private void updateProjectiles() {
+        Iterator<Projectile> iterator = projectiles.iterator();
+        while (iterator.hasNext()) {
+            Projectile projectile = iterator.next();
+            projectile.moveProjectile(projectile.getDirection());
+            if (projectileIsOutOfBounds(projectile)) {
+                iterator.remove();
+            }
+        }
+    }
+
+    private void drawProjectiles(Canvas canvas) {
+        for (Projectile projectile : projectiles) {
+            projectile.draw(canvas);
+        }
+    }
+
+    private boolean projectileIsOutOfBounds(Projectile projectile) {
+        return projectile.getX() < 0 || projectile.getX() + projectile.getWidth() > getWidth();
     }
 
     @Override
@@ -70,20 +93,15 @@ public class CustomView extends View {
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
             case MotionEvent.ACTION_MOVE:
-                // Determine direction based on touch position
                 float x = event.getX();
                 float y = event.getY();
-
                 double leftButton = getWidth() * 0.2;
                 double rightButton = leftButton + (getWidth() * 0.2);
-
                 isMovingLeft = x < leftButton;
                 isMovingRight = x > leftButton && x < rightButton;
-
                 return true;
 
             case MotionEvent.ACTION_UP:
-                // Stop movement when touch is lifted
                 isMovingLeft = false;
                 isMovingRight = false;
                 return true;
@@ -92,13 +110,30 @@ public class CustomView extends View {
     }
 
     @SuppressLint("ClickableViewAccessibility")
-    public void setupButton(Button buttonJump) {
-        // Handle jump button press
+    public void setupButton(Button buttonJump, Button buttonAttack) {
         buttonJump.setOnTouchListener((v, event) -> {
-            if (event.getAction() == MotionEvent.ACTION_MOVE || event.getAction() == MotionEvent.ACTION_DOWN) {
+            if (event.getAction() == MotionEvent.ACTION_MOVE) {
                 player.jumpCharacter();
             }
             return true;
         });
+
+        buttonAttack.setOnTouchListener((v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_MOVE) {
+                fireProjectile();
+            }
+            return true;
+        });
+    }
+
+    private void fireProjectile() {
+        // Check if enough time has passed based on attack speed
+        long currentTime = System.currentTimeMillis();
+        long attackInterval = (long) (1000 / player.getAtkSpeed());
+        if (currentTime - player.getLastAttackTime() >= attackInterval) {
+            Projectile projectile = new Projectile(getContext(), player.getX(), player.getY(), floorY, getWidth(), player.getDirection());
+            projectiles.add(projectile);
+            player.setLastAttackTime(currentTime);
+        }
     }
 }

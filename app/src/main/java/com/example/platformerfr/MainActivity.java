@@ -14,7 +14,8 @@ public class MainActivity extends AppCompatActivity {
         // Find the custom view and buttons
         CustomView customView = findViewById(R.id.myCanvasView);
         Button buttonJump = findViewById(R.id.button_jump);
+        Button buttonAttack = findViewById(R.id.button_attack);
 
-        customView.setupButton(buttonJump);
+        customView.setupButton(buttonJump, buttonAttack);
     }
 }
