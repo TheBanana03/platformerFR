@@ -20,17 +20,19 @@ public class PlayerCharacter {
     private final Paint paint;
     private int floorY;
     private int wallX;
+    private String direction;
 
-    public PlayerCharacter(Context context, int x, int y, int width, int height, int floorY, int wallX) {
+    public PlayerCharacter(Context context, int x, int y, int floorY, int wallX) {
         this.x = x;
         this.y = y;
-        this.width = width;
-        this.height = height;
-        this.xSpeed = 10;
+        this.width = 150;
+        this.height = 150;
+        this.xSpeed = 7;
         this.ySpeed = 0;
         this.gravity = 0.25;
         this.floorY = floorY;
         this.wallX = wallX;
+        this.direction = "Right";
 
         // Initialize bounding box and paint
         boundingBox = new Rect(x, y, x + width, y + height);
@@ -49,16 +51,15 @@ public class PlayerCharacter {
     }
 
     public void update(int floorY) {
-        // Gravity is always applied while in the air
         if (y + height < floorY || ySpeed < 0) {
             y += ySpeed;
             ySpeed += gravity;
         } else {
-            // Character hits the floor
             y = floorY - height;
-            ySpeed = 0;  // Stop falling
-            isJumping = false; // Allow jumping again
+            ySpeed = 0;
+            isJumping = false;
         }
+        changeSprite();
 
         // Update bounding box based on the character's position
         boundingBox.set(x, y, x + width, y + height);
@@ -71,19 +72,30 @@ public class PlayerCharacter {
 
     public void jumpCharacter() {
         if (!isJumping) {
-            ySpeed = -13;  // Initial jump speed (negative so the character goes up)
+            ySpeed = -11;  // Initial jump speed (negative so the character goes up)
             isJumping = true;  // Prevent multiple jumps in the air
+        }
+    }
+
+    public void changeSprite () {
+        switch (direction) {
+            case "Right":
+                currentSprite = spriteFlipped;
+                break;
+            case "Left":
+                currentSprite = sprite;
+                break;
         }
     }
 
     public void moveCharacter(Boolean left, Boolean right) {
         if (left) {
             x -= xSpeed;
-            currentSprite = sprite;
+            direction = "Left";
         }
         if (right) {
             x += xSpeed;
-            currentSprite = spriteFlipped;
+            direction = "Right";
         }
 
         // Ensure the character doesn't move out of the screen bounds
